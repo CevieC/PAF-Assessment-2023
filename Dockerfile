@@ -1,2 +1,23 @@
-FROM maven:3-eclipse-temurin-21
+FROM maven:3-eclipse-temurin-21 AS builder
 
+WORKDIR /app
+
+COPY mvnw .
+COPY mvnw.cmd .
+COPY pom.xml .
+COPY .mvn .mvn
+COPY src src
+
+RUN mvn package -Dmaven.test.skip=true
+
+ENV PORT=8080 
+ENV SPRING_DATA_MYSQL_HOST=NOT_SET SPRING_DATA_MYSQL_PORT=NOT_SET
+ENV SPRING_DATA_MYSQL_PASSWORD=NOT_SET SPRING_DATA_MYSQL_USER=NOT_SET SPRING_DATA_MYSQL_DATABASE=NOT_SET
+
+ENV SPRING_DATA_MONGODB_URI=NOT_SET
+
+
+EXPOSE ${PORT}
+
+
+ENTRYPOINT SERVER_PORT=${PORT} java -jar target/assessment-0.0.1-SNAPSHOT.jar
