@@ -1,0 +1,73 @@
+Write your Task 2 answers in this file
+
+2.1
+For local MongoDB import:
+mongoimport --db=bedandbreakfast -c listing_and_reviews --type=json --file=data/listings.json
+
+2.2
+To find the listings in Australia:
+db.listing_and_reviews.find({
+        "address.country" : { $regex: /australia/i}
+}).pretty();
+
+To export the listings to a new collection:
+db.listing_and_reviews.aggregate([
+    {
+        $match : {
+            "address.country" : {
+                $regex: /australia/i
+            }
+        }
+    },
+    {
+        $out: "listings"  
+    }
+]);
+
+2.3
+To handle the reviews data:
+db.listings.aggregate([
+    { $unwind: "$reviews" },
+    {
+        $project: {
+            _id: "$reviews._id",
+            date: "$reviews.date",
+            listing_id: "$reviews.listing_id",
+            reviewer_name: {
+                $replaceAll: {
+                            input: "$reviews.reviewer_name", find: ",", replacement: ""
+                        }
+            },
+            comments: {
+                $replaceAll: {
+                    input: "$reviews.comments", find: "\n" , replacement: ""
+                }
+            }
+        }
+    },
+    {
+        $project: {
+            _id: "$_id",
+            date: "$date",
+            listing_id: "$listing_id",
+            reviewer_name: "$reviewer_name",
+            comments: {
+                $replaceAll: {
+                    input: "$comments", find: "\r" , replacement: " "
+                }
+            }
+        }
+    },
+    {
+        $out: "reviews"
+    }
+]);
+
+2.4
+To delete the reviews attribute:
+db.listings.updateMany({}, {"$unset": {"reviews": 1}})
+
+2.5
+
+
+
